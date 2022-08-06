@@ -3,10 +3,9 @@ from __future__ import annotations
 import datetime as dt
 
 from itertools import count
+from typing import Any, Optional
 from queue import PriorityQueue
 from enum import Enum, unique
-from tempfile import gettempdir
-from types import MappingProxyType
 
 
 # Typing
@@ -18,9 +17,9 @@ class DropsMessage(Enum):
     ...
 
 
-class ChannelFilters:
-    filter_am_i_receiver: boolean = True
-    filter_am_i_sender: boolean = True
+class ChannelOptions:
+    filter_am_i_receiver: bool = True
+    filter_am_i_sender: bool = True
 
 
 class Drops:
@@ -37,9 +36,9 @@ class Drops:
         self.event_queue: EventQueue = EventQueue(messages=messages)
 
     def _register_members(self, members: list[Member]):
-        self.members: Member = members
-        for member in self.members:
-            member._register
+        self.members = members
+        for name, member_class in self.members.items():
+            m = member_class.value(name=name, event_queue=self.event_queue)
 
     def run(self):
         while self.event_queue:
@@ -51,10 +50,12 @@ class Drops:
 class Event:
     counter = count()
 
-    def __init__(self, *, time: Datetime, message: DropsMessage, **kwargs) -> None:
+    def __init__(self, *, time: Datetime, message: DropsMessage, sender: Member = None, receiver: Optional[Member] | Optional[list[Member]] = None, ** kwargs) -> None:
         self.event_id: int = next(self.counter)
         self.time: Datetime = time
         self.message: DropsMessage = message
+        self.sender: Any = sender
+        self.receiver: Any = receiver
         for k, v in kwargs.items():
             setattr(self, k, v)
 
@@ -74,15 +75,15 @@ class EventQueue(PriorityQueue):
 class Member:
     counter = count()
 
-    def __init__(self, name: str, queue: EventQueue):
+    def __init__(self, name: str, event_queue: EventQueue):
         self.member_id: int = next(self.counter)
         self.name = name
-        self.queue: EventQueue = queue
+        self.event_queue: EventQueue = event_queue
         self._register()
 
     def _register(self):
-        for channel in self.channels:
-            self.queue.channels[channel].append(self)
+        for channel in self.default_config['channels']:
+            self.event_queue.channels[channel].append(self)
 
     def update(self, event: Event):
         getattr(self, event.message.value)(event)

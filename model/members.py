@@ -4,5 +4,5 @@ from enum import Enum
 
 
 class Members(Enum):
-    alice = Alice
-    bob = Bob
+    ALICE = Alice
+    BOB = Bob
