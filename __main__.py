@@ -1,21 +1,28 @@
+import json
+import importlib
 import datetime as dt
 
-from src.drops import Drops, Event
-from model.members import Members
-from model.messages import Messages
+from pathlib import Path
+from src.drops import Drops
+from examples.aliceandbob.model.members import Members
+from examples.aliceandbob.model.messages import Messages
 
-NOW = dt.datetime.now()
 
-members = {
-    'name_alice': Members.ALICE,
-    'name_bob': Members.BOB
-}
+def main():
 
-sim = Drops(
-    messages=Messages,
-    members=members
-)
+    app = Drops(
+        messages=Messages,
+        members={
+            'Alice': {
+                'member': Members.ALICE,
+                'coin_detection_probability': 0.5
+            },
+            'VendingMachine': Members.VENDER
+        }
+    )
 
-e = Event(time=NOW, message=Messages.HELLO)
-sim.event_queue.queue.put(e)
-sim.run()
+    app.run()
+
+
+if __name__ == '__main__':
+    main()
