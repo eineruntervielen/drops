@@ -62,6 +62,9 @@ class Event:
     def __str__(self):
         return f'Event(id={self.id}, time={self.time}, message={self.message})'
 
+    def __lt__(self, __o: object) -> bool:
+        return self.time < __o.time and self.event_id < __o.event_id
+
 
 class EventQueue(PriorityQueue):
     maxsize: int = 0
@@ -78,12 +81,34 @@ class Member:
     def __init__(self, name: str, event_queue: EventQueue):
         self.member_id: int = next(self.counter)
         self.name = name
-        self.event_queue: EventQueue = event_queue
+        self._event_queue: EventQueue = event_queue
         self._register()
+        for channel in self.default_config['channels']:
+            if not hasattr(self, channel.value):
+                raise NotImplementedError(f'Member {self} needs to implement a callback for channel {channel}')
 
     def _register(self):
         for channel in self.default_config['channels']:
-            self.event_queue.channels[channel].append(self)
+            self._event_queue.channels[channel].append(self)
 
     def update(self, event: Event):
+        """Every member is updated according to its subscriptions to
+        the channels on the EventQueue. If an Event occurs the member
+        receives an update on which a pseudo-callback function
+        is called.
+
+        Args:
+            event (Event): Event to trigger the pseudo-callback
+        """
         getattr(self, event.message.value)(event)
+
+    def share(self, *, time: Datetime, message: DropsMessage, **kwargs):
+        """Inserts an upcoming Event into the EventQueue.
+
+        Args:
+            time (Datetime): Future point in time when the event happens
+            message (DropsMessage): Message that carries the informations
+        """
+        self._event_queue.queue.put(
+            Event(time=time, message=message, sender=self, kwargs=kwargs)
+        )
