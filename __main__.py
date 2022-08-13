@@ -1,21 +1,13 @@
-import json
-import importlib
-import datetime as dt
-
-from pathlib import Path
-from re import M
 from src.drops import Drops
-from examples.aliceandbob.model.members import Members
-from examples.aliceandbob.model.messages import Messages
+from pathlib import Path
 
 
 def main():
-
+    scenario = Path('examples/car_wash')
     app = Drops(
-        messages=Messages,
-        members=Members)
+        scenario_path=scenario
+    )
     app.run()
-    print('rausgekommen')
 
 
 if __name__ == '__main__':
