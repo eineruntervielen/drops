@@ -14,7 +14,24 @@ Datetime: dt.datetime
 
 @unique
 class DropsMessage(Enum):
-    ...
+    """An implementation of a devloper-experience centered Enum.
+    Since the pseudo-callbacks of the DropsMessages are by design
+    the lowercase of the DropsMessage name, the value of the enum
+    is of no interest. Therefore one can use the class like this:
+
+    class Messages(DropsMessage):
+        HELLO = ()
+        GOOD_BY = ()
+        HOW_ARE_YOU = ()
+    """
+    def __new__(cls):
+        value = len(cls.__members__) + 1
+        obj = object.__new__(cls)
+        obj._value_ = value
+        return obj
+
+    def __repr__(self) -> str:
+        return f'<{self.__class__.__name__}.{self.name}>'
 
 
 class ChannelOptions:
@@ -29,6 +46,7 @@ class Drops:
                  members: Member
                  ) -> None:
         self.messages: DropsMessage = messages
+        self.members = members
         self._register_messages(messages=messages)
         self._register_members(members=members)
 
@@ -36,9 +54,8 @@ class Drops:
         self.event_queue: EventQueue = EventQueue(messages=messages)
 
     def _register_members(self, members: list[Member]):
-        self.members = members
-        for name, member_class in self.members.items():
-            m = member_class.value(name=name, event_queue=self.event_queue)
+        for member in self.members:
+            m = member.value(name=member, event_queue=self.event_queue)
 
     def run(self):
         while self.event_queue:
@@ -84,8 +101,9 @@ class Member:
         self._event_queue: EventQueue = event_queue
         self._register()
         for channel in self.default_config['channels']:
-            if not hasattr(self, channel.value):
-                raise NotImplementedError(f'Member {self} needs to implement a callback for channel {channel}')
+            if not hasattr(self, str(channel.name).lower()):
+                raise NotImplementedError(
+                    f'Member {self} needs to implement a callback for channel {channel}')
 
     def _register(self):
         for channel in self.default_config['channels']:
@@ -100,7 +118,7 @@ class Member:
         Args:
             event (Event): Event to trigger the pseudo-callback
         """
-        getattr(self, event.message.value)(event)
+        getattr(self, event.message.name.lower())(event)
 
     def share(self, *, time: Datetime, message: DropsMessage, **kwargs):
         """Inserts an upcoming Event into the EventQueue.

@@ -10,8 +10,6 @@ class Alice(Member):
     default_config = MappingProxyType({
         'patience': 5,
         'channels': {
-            Messages.COIN_ERROR: ChannelOptions(),
-            Messages.COIN_DETECTED: ChannelOptions(),
         }
     })
 
@@ -21,9 +19,3 @@ class Alice(Member):
             time=dt.datetime.now(),
             message=Messages.COIN_INSERTED
         )
-    
-    def coin_error(self, e: Event):
-        ...
-    
-    def coin_detected(self, e: Event):
-        ...

@@ -15,7 +15,7 @@ class Vender(Member):
 
     def __init__(self, name: str, event_queue: EventQueue):
         super().__init__(name, event_queue)
-        self.coin_detection_probability = default_config['coin_detection_probability']
+        self.coin_detection_probability = self.default_config['coin_detection_probability']
     
     def coin_inserted(self, e: Event):
         print('coin inserted says vender')
