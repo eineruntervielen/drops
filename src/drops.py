@@ -91,8 +91,8 @@ class Drops:
             messages=self.messages, maxsize=self.maxsize)
 
     def __register_members(self):
-        for member in self.members:
-            member.value(name=member, event_queue=self.event_queue)
+        for name, member in self.members.items():
+            member(name=name, event_queue=self.event_queue)
 
     def run(self):
         while not self.event_queue.empty():
@@ -163,7 +163,7 @@ class Member:
 
     def __check_subcallbacks(self):
         for sub in self.subscriptions:
-            reaction_name: str = '_' + str(sub.name).lower()
+            reaction_name: str = str(sub.name).lower()
             if not hasattr(self, reaction_name):
                 raise NotImplementedError(
                     f'Member {self} needs to implement a reaction for channel {sub}'
@@ -178,7 +178,7 @@ class Member:
         Args:
             event (Event): Event to trigger the pseudo-callback
         """
-        getattr(self, '_' + event.message.name.lower())(event)
+        getattr(self, event.message.name.lower())(event)
 
     def share(self, *, time: Datetime | int, message: DropsMessage, **kwargs):
         """Inserts an upcoming Event into the EventQueue.
@@ -187,6 +187,7 @@ class Member:
             time (Datetime): Future point in time when the event happens
             message (DropsMessage): Message that carries the information
         """
+        sargs = locals()
         self._event_queue.put(
-            Event(time=time, message=message, sender=self, kwargs=kwargs)
+            Event(time=time, message=message, **sargs['kwargs'])
         )

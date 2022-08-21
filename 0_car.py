@@ -18,11 +18,11 @@ class Car(Member):
         super().__init__(name, event_queue)
         self._event_queue.put(Event(
             time=0,
-            message=Messages.DRIVING,
+            message=Messages.PARKING,
         ))
 
     def _driving(self, e: Event):
-        print(f'Car driving start {e.time}')
+        print(f'Car driving  {e.time}')
         self._event_queue.put(Event(
             time=e.time + random.randint(1, 10),
             message=Messages.PARKING,
