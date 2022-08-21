@@ -52,21 +52,29 @@ class Drops:
     )
 
     def __init__(self,
-                 # messages: DropsMessage,  # todo maybe both ways?
-                 # members: Member,  # todo maybe both ways?
-                 scenario_path: Path,
+                 end,
+                 messages: DropsMessage,  # todo maybe both ways?
+                 members: Member,  # todo maybe both ways?
+                 scenario_path: Path = None,
                  maxsize: int = default_config['MAXSIZE'],
                  ) -> None:
         self.maxsize = maxsize
+        self.end = end
         self.scenario_path = scenario_path
-        self.__load_modules()
+        if self.scenario_path:
+            self.__load_modules()
+        else:
+            self.messages = messages
+            self.members = members
         self.__register_messages()
         self.__register_members()
 
     def __load_modules(self):
         # todo this needs to be understood in greater detail but looks awesome
-        spec_members = importlib.util.spec_from_file_location("members", self.scenario_path / 'model/members.py')
-        spec_messages = importlib.util.spec_from_file_location("messages", self.scenario_path / 'model/messages.py')
+        spec_members = importlib.util.spec_from_file_location(
+            "members", self.scenario_path / 'model/members.py')
+        spec_messages = importlib.util.spec_from_file_location(
+            "messages", self.scenario_path / 'model/messages.py')
         members = importlib.util.module_from_spec(spec_members)
         messages = importlib.util.module_from_spec(spec_messages)
         sys.modules["members"] = members
@@ -79,7 +87,8 @@ class Drops:
     def __register_messages(self):
         # todo because self.messages is not the class enum by itself we need to call messages.name everywhere
         # this sucks
-        self.event_queue: EventQueue = EventQueue(messages=self.messages, maxsize=self.maxsize)
+        self.event_queue: EventQueue = EventQueue(
+            messages=self.messages, maxsize=self.maxsize)
 
     def __register_members(self):
         for member in self.members:
@@ -88,8 +97,11 @@ class Drops:
     def run(self):
         while not self.event_queue.empty():
             event = self.event_queue.get(block=False)
-            for member in self.event_queue.channels[event.message.name]:
-                member.update(event=event)
+            if event.time <= self.end:
+                for member in self.event_queue.channels[event.message.name]:
+                    member.update(event=event)
+            else:
+                break
 
 
 class EventState(Enum):
@@ -151,9 +163,10 @@ class Member:
 
     def __check_subcallbacks(self):
         for sub in self.subscriptions:
-            if not hasattr(self, str(sub.name).lower()):
+            reaction_name: str = '_' + str(sub.name).lower()
+            if not hasattr(self, reaction_name):
                 raise NotImplementedError(
-                    f'Member {self} needs to implement a callback for channel {sub}'
+                    f'Member {self} needs to implement a reaction for channel {sub}'
                 )
 
     def update(self, event: Event):
@@ -165,7 +178,7 @@ class Member:
         Args:
             event (Event): Event to trigger the pseudo-callback
         """
-        getattr(self, event.message.name.lower())(event)
+        getattr(self, '_' + event.message.name.lower())(event)
 
     def share(self, *, time: Datetime | int, message: DropsMessage, **kwargs):
         """Inserts an upcoming Event into the EventQueue.
