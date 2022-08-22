@@ -3,7 +3,7 @@ from pathlib import Path
 
 
 def main():
-    scenario = Path('examples/car_wash')
+    scenario = Path('examples/movie_renege')
     app = Drops(
         scenario_path=scenario
     )

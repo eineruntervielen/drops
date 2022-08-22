@@ -4,7 +4,6 @@ from ..model.messages import Messages
 
 class Controler(Member):
     subscriptions = {
-        Messages.CAR_ARRIVES: ChannelOptions(),
         Messages.CAR_LEAVES: ChannelOptions(),
     }
 

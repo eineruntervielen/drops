@@ -124,7 +124,7 @@ class Event:
             setattr(self, k, v)
 
     def __str__(self):
-        return f'Event(id={self.id}, time={self.time}, message={self.message})'
+        return f'Event(id={self.event_id}, time={self.time}, message={self.message})'
 
     def __lt__(self, __o: object) -> bool:
         return self.time < __o.time and self.event_id < __o.event_id
