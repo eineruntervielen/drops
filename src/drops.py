@@ -52,14 +52,20 @@ class Drops:
     )
 
     def __init__(self,
-                 # messages: DropsMessage,  # todo maybe both ways?
-                 # members: Member,  # todo maybe both ways?
-                 scenario_path: Path,
-                 maxsize: int = default_config['MAXSIZE'],
+                 messages=None,
+                 members=None,
+                 scenario_path=None,
+                 maxsize=default_config['MAXSIZE'],
                  ) -> None:
         self.maxsize = maxsize
-        self.scenario_path = scenario_path
-        self.__load_modules()
+        if scenario_path:
+            # Scenario API
+            self.scenario_path = scenario_path
+            self.__load_modules()
+        else:
+            # Standard API
+            self.members = members
+            self.messages = messages
         self.__register_messages()
         self.__register_members()
 
@@ -112,7 +118,7 @@ class Event:
             setattr(self, k, v)
 
     def __str__(self):
-        return f'Event(id={self.id}, time={self.time}, message={self.message})'
+        return f'Event(id={self.event_id}, time={self.time}, message={self.message})'
 
     def __lt__(self, __o: object) -> bool:
         return self.time < __o.time and self.event_id < __o.event_id
