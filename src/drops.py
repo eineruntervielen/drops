@@ -52,27 +52,29 @@ class Drops:
     )
 
     def __init__(self,
-                 messages=None,
-                 members=None,
-                 scenario_path=None,
-                 maxsize=default_config['MAXSIZE'],
+                 end,
+                 messages: DropsMessage,  # todo maybe both ways?
+                 members: Member,  # todo maybe both ways?
+                 scenario_path: Path = None,
+                 maxsize: int = default_config['MAXSIZE'],
                  ) -> None:
         self.maxsize = maxsize
-        if scenario_path:
-            # Scenario API
-            self.scenario_path = scenario_path
+        self.end = end
+        self.scenario_path = scenario_path
+        if self.scenario_path:
             self.__load_modules()
         else:
-            # Standard API
-            self.members = members
             self.messages = messages
+            self.members = members
         self.__register_messages()
         self.__register_members()
 
     def __load_modules(self):
         # todo this needs to be understood in greater detail but looks awesome
-        spec_members = importlib.util.spec_from_file_location("members", self.scenario_path / 'model/members.py')
-        spec_messages = importlib.util.spec_from_file_location("messages", self.scenario_path / 'model/messages.py')
+        spec_members = importlib.util.spec_from_file_location(
+            "members", self.scenario_path / 'model/members.py')
+        spec_messages = importlib.util.spec_from_file_location(
+            "messages", self.scenario_path / 'model/messages.py')
         members = importlib.util.module_from_spec(spec_members)
         messages = importlib.util.module_from_spec(spec_messages)
         sys.modules["members"] = members
@@ -85,17 +87,21 @@ class Drops:
     def __register_messages(self):
         # todo because self.messages is not the class enum by itself we need to call messages.name everywhere
         # this sucks
-        self.event_queue: EventQueue = EventQueue(messages=self.messages, maxsize=self.maxsize)
+        self.event_queue: EventQueue = EventQueue(
+            messages=self.messages, maxsize=self.maxsize)
 
     def __register_members(self):
-        for member in self.members:
-            member.value(name=member, event_queue=self.event_queue)
+        for name, member in self.members.items():
+            member(name=name, event_queue=self.event_queue)
 
     def run(self):
         while not self.event_queue.empty():
             event = self.event_queue.get(block=False)
-            for member in self.event_queue.channels[event.message.name]:
-                member.update(event=event)
+            if event.time <= self.end:
+                for member in self.event_queue.channels[event.message.name]:
+                    member.update(event=event)
+            else:
+                break
 
 
 class EventState(Enum):
@@ -157,9 +163,10 @@ class Member:
 
     def __check_subcallbacks(self):
         for sub in self.subscriptions:
-            if not hasattr(self, str(sub.name).lower()):
+            reaction_name: str = str(sub.name).lower()
+            if not hasattr(self, reaction_name):
                 raise NotImplementedError(
-                    f'Member {self} needs to implement a callback for channel {sub}'
+                    f'Member {self} needs to implement a reaction for channel {sub}'
                 )
 
     def update(self, event: Event):
@@ -180,6 +187,7 @@ class Member:
             time (Datetime): Future point in time when the event happens
             message (DropsMessage): Message that carries the information
         """
+        sargs = locals()
         self._event_queue.put(
-            Event(time=time, message=message, sender=self, kwargs=kwargs)
+            Event(time=time, message=message, **sargs['kwargs'])
         )
