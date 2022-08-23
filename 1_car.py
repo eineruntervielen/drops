@@ -1,7 +1,7 @@
 from email.message import Message
 import random
 from enum import Enum
-from src.drops import Drops, DropsMessage, Member, ChannelOptions, EventQueue, Event, Drops
+from src.drops import Drops, DropsMessage, DropsComponent, ChannelOptions, EventQueue, Event, Drops
 
 
 class Messages(DropsMessage):
@@ -10,7 +10,7 @@ class Messages(DropsMessage):
     REGISTER_SLOT = ()
 
 
-class Car(Member):
+class Car(DropsComponent):
     subscriptions: dict[DropsMessage, ChannelOptions] = {
         Messages.DRIVING: ChannelOptions(),
         Messages.PARKING: ChannelOptions()
@@ -38,7 +38,7 @@ class Car(Member):
         )
 
 
-class ParkingSystem(Member):
+class ParkingSystem(DropsComponent):
     subscriptions: dict[DropsMessage, ChannelOptions] = {
         Messages.REGISTER_SLOT: ChannelOptions()
     }
@@ -51,7 +51,7 @@ class ParkingSystem(Member):
         self.parking_slots.append(e.sender)
 
 
-class ParkingSlot(Member):
+class ParkingSlot(DropsComponent):
     subscriptions: dict[DropsMessage, ChannelOptions] = {
         Messages.PARKING: ChannelOptions(),
         Messages.DRIVING: ChannelOptions()

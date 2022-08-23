@@ -53,8 +53,8 @@ class Drops:
 
     def __init__(self,
                  end,
-                 messages: DropsMessage,  # todo maybe both ways?
-                 members: Member,  # todo maybe both ways?
+                 messages: DropsMessage,
+                 members: DropsComponent,
                  scenario_path: Path = None,
                  maxsize: int = default_config['MAXSIZE'],
                  ) -> None:
@@ -62,14 +62,14 @@ class Drops:
         self.end = end
         self.scenario_path = scenario_path
         if self.scenario_path:
-            self.__load_modules()
+            self._load_modules()
         else:
             self.messages = messages
             self.members = members
-        self.__register_messages()
-        self.__register_members()
+        self._register_messages()
+        self._register_members()
 
-    def __load_modules(self):
+    def _load_modules(self):
         # todo this needs to be understood in greater detail but looks awesome
         spec_members = importlib.util.spec_from_file_location(
             "members", self.scenario_path / 'model/members.py')
@@ -84,13 +84,13 @@ class Drops:
         self.members = members.Members
         self.messages = messages.Messages
 
-    def __register_messages(self):
+    def _register_messages(self):
         # todo because self.messages is not the class enum by itself we need to call messages.name everywhere
         # this sucks
         self.event_queue: EventQueue = EventQueue(
             messages=self.messages, maxsize=self.maxsize)
 
-    def __register_members(self):
+    def _register_members(self):
         for name, member in self.members.items():
             member(name=name, event_queue=self.event_queue)
 
@@ -99,27 +99,21 @@ class Drops:
             event = self.event_queue.get(block=False)
             if event.time <= self.end:
                 for member in self.event_queue.channels[event.message.name]:
-                    member.update(event=event)
+                    member.inform(event=event)
             else:
                 break
-
-
-class EventState(Enum):
-    OPEN = 'open'
-    PROCESSED = 'processed'
 
 
 class Event:
     counter = count()
 
-    def __init__(self, *, time: Datetime | int, message: DropsMessage, sender: Member = None,
-                 receiver: Optional[Member] | Optional[list[Member]] = None, **kwargs) -> None:
+    def __init__(self, *, time: Datetime | int, message: DropsMessage, sender: DropsComponent = None,
+                 receiver: Optional[DropsComponent] | Optional[list[DropsComponent]] = None, **kwargs) -> None:
         self.event_id: int = next(self.counter)
         self.time: Datetime | int = time
         self.message: DropsMessage = message
-        self.sender: Any = sender
-        self.receiver: Any = receiver
-        self.state: EventState = EventState.OPEN
+        self.sender: DropsComponent = sender
+        self.receiver: DropsComponent = receiver
         for k, v in kwargs.items():
             setattr(self, k, v)
 
@@ -138,38 +132,38 @@ class EventQueue(PriorityQueue):
         self.channels = {msg.name: [] for msg in messages}
 
 
-class Member:
+class DropsComponent:
     counter = count()
     subscriptions: dict[DropsMessage, ChannelOptions] = {}
 
     def __init__(self, name: str, event_queue: EventQueue):
-        self.member_id: int = next(self.counter)
-        self.name = name
+        self.component_id: int = next(self.counter)
+        self.name: str = name
         self._event_queue: EventQueue = event_queue
-        self.__check_subscriptions()
-        self.__register()
-        self.__check_subcallbacks()
 
-    def __check_subscriptions(self):
+        self._check_subscriptions()
+        self._subscribe()
+        self._check_reaction()
+
+    def _check_subscriptions(self):
         if not self.subscriptions:
-            # raise NotImplementedError(
             print(NotImplementedError(
-                f'The Member {self.name} has no subscriptions. Are you shure thats intended?'
+                f'The component {self.name} has no subscriptions. Are you shure that was intended?'
             ))
 
-    def __register(self):
-        for sub in self.subscriptions:
-            self._event_queue.channels[sub.name].append(self)
+    def _subscribe(self):
+        for subscription in self.subscriptions:
+            self._event_queue.channels[subscription.name].append(self)
 
-    def __check_subcallbacks(self):
-        for sub in self.subscriptions:
-            reaction_name: str = str(sub.name).lower()
+    def _check_reactions(self):
+        for subscription in self.subscriptions:
+            reaction_name: str = str(subscription.name).lower()
             if not hasattr(self, reaction_name):
                 raise NotImplementedError(
-                    f'Member {self} needs to implement a reaction for channel {sub}'
+                    f'Member {self} needs to implement a reaction for the subscription {subscription}'
                 )
 
-    def update(self, event: Event):
+    def inform(self, event: Event):
         """Every member is updated according to its subscriptions to
         the channels on the EventQueue. If an Event occurs the member
         receives an update on which a pseudo-callback function
