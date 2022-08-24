@@ -10,7 +10,7 @@ from itertools import count
 from pathlib import Path
 from queue import PriorityQueue
 from types import MappingProxyType
-from typing import Any, Optional
+from typing import Any, NamedTuple, Optional
 
 # Typing
 Datetime: dt.datetime
@@ -38,11 +38,14 @@ class DropsMessage(Enum):
     def __repr__(self) -> str:
         return f'<{self.__class__.__name__}.{self.name}>'
 
-
-@dataclass
-class ChannelOptions:
-    filter_am_i_receiver: Optional[bool] = True
-    filter_am_i_sender: Optional[bool] = True
+class MessageFilter(NamedTuple):
+    """Used to filter out messages that are none of the DropsComponent's
+    business. Maybe there exists a Message.HELLO and the component
+    is only reacting if the greeting is directed to itself and not a
+    general greeting.
+    """
+    filter_am_i_receiver: Optional[bool] = False
+    filter_am_i_sender: Optional[bool] = False
 
 
 class Drops:
@@ -101,7 +104,8 @@ class Drops:
             event = self.event_queue.get(block=False)
             if self.end:
                 if event.time <= self.end:
-                    for member in self.event_queue.channels[event.message.name]:
+                    for member in self.event_queue.channels[event.msg.name]:
+                        # TODO: check if member has filters
                         member.inform(event=event)
                 else:
                     break
@@ -113,18 +117,18 @@ class Drops:
 class Event:
     counter = count()
 
-    def __init__(self, *, time: DropsTime, message: DropsMessage, sender: DropsComponent = None,
+    def __init__(self, *, time: DropsTime, msg: DropsMessage, sender: DropsComponent = None,
                  receiver: Optional[DropsComponent] | Optional[list[DropsComponent]] = None, **kwargs) -> None:
         self.event_id: int = next(self.counter)
         self.time: DropsTime = time
-        self.message: DropsMessage = message
+        self.msg: DropsMessage = msg 
         self.sender: DropsComponent = sender
         self.receiver: DropsComponent = receiver
         for k, v in kwargs.items():
             setattr(self, k, v)
 
     def __str__(self):
-        return f'Event(id={self.event_id}, time={self.time}, message={self.message})'
+        return f'Event(id={self.event_id}, time={self.time}, message={self.msg})'
 
     def __lt__(self, __o: object) -> bool:
         return self.time < __o.time and self.event_id < __o.event_id
@@ -140,7 +144,7 @@ class EventQueue(PriorityQueue):
 
 class DropsComponent:
     counter = count()
-    subscriptions: dict[DropsMessage, ChannelOptions] = {}
+    subscriptions: dict[DropsMessage, MessageFilter] = {}
 
     def __init__(self, name: str, event_queue: EventQueue):
         self.component_id: int = next(self.counter)
@@ -177,9 +181,9 @@ class DropsComponent:
         Args:
             event (Event): Event to trigger the reaction-method
         """
-        getattr(self, event.message.name.lower())(event)
+        getattr(self, event.msg.name.lower())(event)
 
-    def share(self, *, time: Datetime | int, message: DropsMessage, **kwargs):
+    def share(self, *, time: Datetime | int, msg: DropsMessage, **kwargs):
         """Inserts an upcoming Event into the EventQueue.
 
         Args:
@@ -188,5 +192,5 @@ class DropsComponent:
         """
         sargs = locals()
         self._event_queue.put(
-            Event(time=time, message=message, sender=self, **sargs['kwargs'])
+            Event(time=time, msg=msg, sender=self, **sargs['kwargs'])
         )
