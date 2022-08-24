@@ -14,6 +14,7 @@ from typing import Any, Optional
 
 # Typing
 Datetime: dt.datetime
+DropsTime: dt.datetime | dt.time | int
 
 
 @unique
@@ -48,15 +49,16 @@ class Drops:
     default_config = MappingProxyType(
         {
             'MAXSIZE': -1,
+            'END': None
         }
     )
 
     def __init__(self,
-                 end,
                  messages: DropsMessage,
                  members: DropsComponent,
                  scenario_path: Path = None,
                  maxsize: int = default_config['MAXSIZE'],
+                 end=default_config['END'],
                  ) -> None:
         self.maxsize = maxsize
         self.end = end
@@ -97,20 +99,24 @@ class Drops:
     def run(self):
         while not self.event_queue.empty():
             event = self.event_queue.get(block=False)
-            if event.time <= self.end:
+            if self.end:
+                if event.time <= self.end:
+                    for member in self.event_queue.channels[event.message.name]:
+                        member.inform(event=event)
+                else:
+                    break
+            else:
                 for member in self.event_queue.channels[event.message.name]:
                     member.inform(event=event)
-            else:
-                break
 
 
 class Event:
     counter = count()
 
-    def __init__(self, *, time: Datetime | int, message: DropsMessage, sender: DropsComponent = None,
+    def __init__(self, *, time: DropsTime, message: DropsMessage, sender: DropsComponent = None,
                  receiver: Optional[DropsComponent] | Optional[list[DropsComponent]] = None, **kwargs) -> None:
         self.event_id: int = next(self.counter)
-        self.time: Datetime | int = time
+        self.time: DropsTime = time
         self.message: DropsMessage = message
         self.sender: DropsComponent = sender
         self.receiver: DropsComponent = receiver
@@ -143,7 +149,7 @@ class DropsComponent:
 
         self._check_subscriptions()
         self._subscribe()
-        self._check_reaction()
+        self._check_reactions()
 
     def _check_subscriptions(self):
         if not self.subscriptions:
@@ -164,13 +170,12 @@ class DropsComponent:
                 )
 
     def inform(self, event: Event):
-        """Every member is updated according to its subscriptions to
-        the channels on the EventQueue. If an Event occurs the member
-        receives an update on which a pseudo-callback function
-        is called.
+        """Every component is informed according to its subscriptions to
+        the channels on the EventQueue. If an Event occurs the component
+        receives an information on which a reaction-method is emitted.
 
         Args:
-            event (Event): Event to trigger the pseudo-callback
+            event (Event): Event to trigger the reaction-method
         """
         getattr(self, event.message.name.lower())(event)
 
@@ -183,5 +188,5 @@ class DropsComponent:
         """
         sargs = locals()
         self._event_queue.put(
-            Event(time=time, message=message, **sargs['kwargs'])
+            Event(time=time, message=message, sender=self, **sargs['kwargs'])
         )

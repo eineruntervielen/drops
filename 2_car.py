@@ -1,6 +1,7 @@
-"""0. Car
+"""2. Car
 
-This example shows a car starting to drive, then parking, alternating until the simulation reaches time 100
+
+Two cars no ignition
 """
 import random
 from src.drops import Drops, DropsMessage, DropsComponent, ChannelOptions, EventQueue, Event
@@ -13,8 +14,8 @@ class Messages(DropsMessage):
 
 class Car(DropsComponent):
     subscriptions: dict[DropsMessage, ChannelOptions] = {
-        Messages.DRIVING: ChannelOptions(),
-        Messages.PARKING: ChannelOptions()
+        Messages.DRIVING: ChannelOptions(filter_am_i_receiver=True),
+        Messages.PARKING: ChannelOptions(filter_am_i_receiver=True)
     }
 
     def __init__(self, name: str, event_queue: EventQueue):
@@ -40,7 +41,8 @@ class Car(DropsComponent):
 app = Drops(
     messages=Messages,
     members={
-        'car': Car,
+        'car1': Car,
+        'car2': Car,
     },
     end=100
 )
@@ -49,6 +51,7 @@ app.event_queue.put(
     Event(
         time=0,
         message=Messages.DRIVING,
+        receiver='car1'
     )
 )
 
