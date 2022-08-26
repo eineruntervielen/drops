@@ -3,14 +3,16 @@ from __future__ import annotations
 import sys
 import importlib.util
 import datetime as dt
+import threading
 
 from dataclasses import dataclass
 from enum import Enum, unique
+from http.server import SimpleHTTPRequestHandler, HTTPServer
 from itertools import count
 from pathlib import Path
 from queue import PriorityQueue
 from types import MappingProxyType
-from typing import Any, NamedTuple, Optional
+from typing import Optional
 
 # Typing
 Datetime: dt.datetime
@@ -38,7 +40,9 @@ class DropsMessage(Enum):
     def __repr__(self) -> str:
         return f'<{self.__class__.__name__}.{self.name}>'
 
-class MessageFilter(NamedTuple):
+
+@dataclass
+class MessageFilter:
     """Used to filter out messages that are none of the DropsComponent's
     business. Maybe there exists a Message.HELLO and the component
     is only reacting if the greeting is directed to itself and not a
@@ -46,6 +50,19 @@ class MessageFilter(NamedTuple):
     """
     filter_am_i_receiver: Optional[bool] = False
     filter_am_i_sender: Optional[bool] = False
+
+
+class DropsHTTPRequestHandler(SimpleHTTPRequestHandler):
+    record_provider: any
+
+    def do_GET(self):
+        if self.path == '/':
+            try:
+                self.send_response(200)
+            except:
+                self.send_response(404)
+        self.end_headers()
+        self.wfile.write(bytes(f'{DropsHTTPRequestHandler.record_provider}', 'utf-8'))
 
 
 class Drops:
@@ -57,8 +74,8 @@ class Drops:
     )
 
     def __init__(self,
-                 messages: DropsMessage,
-                 members: DropsComponent,
+                 messages,  # TODO typing
+                 members,  # TODO typing
                  scenario_path: Path = None,
                  maxsize: int = default_config['MAXSIZE'],
                  end=default_config['END'],
@@ -73,6 +90,11 @@ class Drops:
             self.members = members
         self._register_messages()
         self._register_members()
+
+    def __str__(self):
+        return f'Drops Application\n' \
+               f'scenario={self.scenario_path}\n' \
+               f'members={self.messages}'
 
     def _load_modules(self):
         # todo this needs to be understood in greater detail but looks awesome
@@ -90,10 +112,10 @@ class Drops:
         self.messages = messages.Messages
 
     def _register_messages(self):
-        # todo because self.messages is not the class enum by itself we need to call messages.name everywhere
-        # this sucks
         self.event_queue: EventQueue = EventQueue(
-            messages=self.messages, maxsize=self.maxsize)
+            messages=self.messages,
+            maxsize=self.maxsize
+        )
 
     def _register_members(self):
         for name, member in self.members.items():
@@ -113,6 +135,16 @@ class Drops:
                 for member in self.event_queue.channels[event.message.name]:
                     member.inform(event=event)
 
+    def serve(self, host: str, port: int):
+        DropsHTTPRequestHandler.record_provider = self
+        httpd = HTTPServer((host, port), DropsHTTPRequestHandler)
+        thread = threading.Thread(target=self.run)
+        try:
+            thread.start()
+            httpd.serve_forever()
+        except KeyboardInterrupt as kbd:
+            print(kbd)
+
 
 class Event:
     counter = count()
@@ -121,7 +153,7 @@ class Event:
                  receiver: Optional[DropsComponent] | Optional[list[DropsComponent]] = None, **kwargs) -> None:
         self.event_id: int = next(self.counter)
         self.time: DropsTime = time
-        self.msg: DropsMessage = msg 
+        self.msg: DropsMessage = msg
         self.sender: DropsComponent = sender
         self.receiver: DropsComponent = receiver
         for k, v in kwargs.items():
@@ -188,7 +220,8 @@ class DropsComponent:
 
         Args:
             time (Datetime): Future point in time when the event happens
-            message (DropsMessage): Message that carries the information
+            msg: (DropsMessage): Message that carries the information
+            **kwargs: The rest of the attributes to create an event
         """
         sargs = locals()
         self._event_queue.put(
