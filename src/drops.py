@@ -53,16 +53,24 @@ class MessageFilter:
 
 
 class DropsHTTPRequestHandler(SimpleHTTPRequestHandler):
+    """
+    recepie:
+
+    https://stackabuse.com/serving-files-with-pythons-simplehttpserver-module/
+    """
     record_provider: any
 
     def do_GET(self):
         if self.path == '/':
             try:
                 self.send_response(200)
+                self.send_header("Content-type", "text/html")
+                html = f"<html><head></head><body><h1>Hello {DropsHTTPRequestHandler.record_provider}!</h1></body></html>"
             except:
                 self.send_response(404)
         self.end_headers()
-        self.wfile.write(bytes(f'{DropsHTTPRequestHandler.record_provider}', 'utf-8'))
+        self.wfile.write(bytes(html, "utf8"))
+        # self.wfile.write(bytes(f'{DropsHTTPRequestHandler.record_provider}', 'utf-8'))
 
 
 class Drops:
@@ -162,8 +170,8 @@ class Event:
     def __str__(self):
         return f'Event(id={self.event_id}, time={self.time}, message={self.msg})'
 
-    def __lt__(self, __o: object) -> bool:
-        return self.time < __o.time and self.event_id < __o.event_id
+    def __lt__(self, other):
+        return self.time < other.time or self.time == other.time and self.event_id < other.event_id
 
 
 class EventQueue(PriorityQueue):
@@ -215,11 +223,11 @@ class DropsComponent:
         """
         getattr(self, event.msg.name.lower())(event)
 
-    def share(self, *, time: Datetime | int, msg: DropsMessage, **kwargs):
+    def share(self, *, time: DropsTime, msg: DropsMessage, **kwargs):
         """Inserts an upcoming Event into the EventQueue.
 
         Args:
-            time (Datetime): Future point in time when the event happens
+            time (DropsTime): Future point in time when the event happens
             msg: (DropsMessage): Message that carries the information
             **kwargs: The rest of the attributes to create an event
         """

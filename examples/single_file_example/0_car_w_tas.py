@@ -26,7 +26,7 @@ class Car(DropsComponent):
         self.share(time=0, msg=Messages.DRIVING)
 
     def driving(self, event: Event):
-        time.sleep(3)
+        time.sleep(.5)
         self.is_driving = True
         print(f'Car driving at {event.time}')
         time_driving = event.time + random.randint(4, 10)
@@ -36,7 +36,7 @@ class Car(DropsComponent):
         )
 
     def parking(self, event: Event):
-        time.sleep(3)
+        time.sleep(.5)
         print(f'Car parking at {event.time}')
         time_parking = event.time + random.randint(8, 10)
         self.share(
@@ -50,8 +50,8 @@ app = Drops(
     members={
         'car': Car,
     },
-    end=100
+    end=1000000000
 )
-# app.serve(host='localhost', port=8081)
+app.serve(host='localhost', port=8081)
 
-app.run()
+# app.run()
