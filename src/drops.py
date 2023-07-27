@@ -1,11 +1,10 @@
+"""Event dispatcher"""
 from __future__ import annotations
 
 import inspect
 from itertools import count
 from queue import PriorityQueue
 from typing import Any, Callable, Hashable, Iterable, MutableMapping, NamedTuple
-
-AnyDict = dict[str, Any]
 
 
 class DelayedEvent(NamedTuple):
@@ -34,23 +33,25 @@ class Event:
     def __getattr__(self, item: Any) -> Any:
         return item
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f'Event(id={self.event_id}, message={self.msg}, time={self.time}, payload={self.payload})'
 
-    def __lt__(self, other):
+    def __lt__(self, other) -> bool:
         return self.time < other.time or self.time == other.time and self.event_id < other.event_id
 
 
+AnyDict = dict[str, Any]
 EventCallback = Callable[[Event], DelayedEvent | ScheduledEvent | None]
+Handler = type | Callable[[...], EventCallback]
 
 
-class EventQueue(PriorityQueue):
+class EventQueue(PriorityQueue[Event]):
 
-    def __init__(self, maxsize):
+    def __init__(self, maxsize: int) -> None:
         super().__init__(maxsize)
-        self.channels: MutableMapping[Hashable, list[Callable]] = {}
+        self.channels: MutableMapping[Hashable, list[Handler]] = {}
 
-    def open_new_channel(self, msg: Hashable):
+    def open_new_channel(self, msg: Hashable) -> None:
         if not self.channels.get(msg):
             self.channels[msg] = []
 
@@ -59,26 +60,28 @@ class Drops:
     maxsize = -1
     END: None
 
-    def __init__(self, name: str, end) -> None:
+    def __init__(self, name: str, end: int) -> None:
         self.name = name
         self.end = end if end else self.END
         self.event_queue = EventQueue(maxsize=self.maxsize)
         self.now = 0
 
-    def register_callback(self, func: Callable[[Event], Event], msgs: Iterable[Hashable]):
-        for msg in msgs:
-            self.event_queue.open_new_channel(msg)
-            self.event_queue.channels[msg].append(func)
+    def register_handler(self, msg: Hashable, handler: Handler):
+        self.event_queue.open_new_channel(msg)
+        self.event_queue.channels[msg].append(handler)
 
-    def register_class(self, cls, **kwargs):
+    def register_callback(self, func: Callable[[...], EventCallback], msgs: Iterable[Hashable]):
+        for msg in msgs:
+            self.register_handler(msg, func)
+
+    def register_class(self, cls: type, **kwargs):
         inst = cls(**kwargs)
         for msg in inst.consumptions:
-            self.event_queue.open_new_channel(msg)
-            self.event_queue.channels[msg].append(inst)
+            self.register_handler(msg, inst)
 
     @staticmethod
     def call_member(member, event: Event):
-        if inspect.isfunction(member):
+        if inspect.isfunction(member) or inspect.isgeneratorfunction(member):
             follow_up = member(event)
             return follow_up
         else:
@@ -94,13 +97,13 @@ class Drops:
                 time = pre_event.time
                 return Event(msg=pre_event.msg, time=time, payload=pre_event.payload)
 
-    def inform_all(self, event):
+    def inform_all(self, event: Event) -> None:
         for member in self.event_queue.channels[event.msg]:
             if follow_up := self.call_member(member, event):
                 new_event = self.create_follow_up_event(follow_up)
                 self.event_queue.put(new_event)
 
-    def run(self):
+    def dispatch(self) -> None:
         while not self.event_queue.empty():
             event = self.event_queue.get(block=False)
             self.now = event.time

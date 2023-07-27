@@ -21,6 +21,10 @@ def car_source_maker() -> EventCallback:
     return car_source
 
 
+def gen_car(event: Event) -> EventCallback:
+    return DelayedEvent(msg="car_arrives", delay=5)
+
+
 @dataclass
 class WashingLine:
     consumptions = ("car_arrives", "start_wash", "end_wash")
