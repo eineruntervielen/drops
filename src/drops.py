@@ -51,6 +51,9 @@ class EventQueue(PriorityQueue[Event]):
         super().__init__(maxsize)
         self.channels: MutableMapping[Hashable, list[Handler]] = {}
 
+    def add_handler_to_channel(self, msg: Hashable, handler: Handler):
+        self.channels[msg].append(handler)
+
     def open_new_channel(self, msg: Hashable) -> None:
         if not self.channels.get(msg):
             self.channels[msg] = []
@@ -68,7 +71,7 @@ class Drops:
 
     def register_handler(self, msg: Hashable, handler: Handler):
         self.event_queue.open_new_channel(msg)
-        self.event_queue.channels[msg].append(handler)
+        self.event_queue.add_handler_to_channel(msg, handler)
 
     def register_callback(self, func: Callable[[...], EventCallback], msgs: Iterable[Hashable]):
         for msg in msgs:
@@ -82,11 +85,11 @@ class Drops:
     @staticmethod
     def call_member(member, event: Event):
         if inspect.isfunction(member) or inspect.isgeneratorfunction(member):
-            follow_up = member(event)
-            return follow_up
+            callback: EventCallback = member
         else:
-            follow_up = getattr(member, str(event.msg))(event)
-            return follow_up
+            callback: EventCallback = getattr(member, str(event.msg))
+        follow_up = callback(event)
+        return follow_up
 
     def create_follow_up_event(self, pre_event: DelayedEvent | ScheduledEvent) -> Event:
         match pre_event:
