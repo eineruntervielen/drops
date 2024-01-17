@@ -73,6 +73,10 @@ class Drops:
         self.event_queue.open_new_channel(msg)
         self.event_queue.add_handler_to_channel(msg, handler)
 
+    def register_source(self):
+        raise NotImplementedError(
+            "hier sollen alle sourcen eingesetzt werden, die werden alle einmal aufgerufen damit initiale events da sind.")
+
     def register_callback(self, func: Callable[[...], EventCallback], msgs: Iterable[Hashable]):
         for msg in msgs:
             self.register_handler(msg, func)
@@ -101,7 +105,7 @@ class Drops:
                 return Event(msg=pre_event.msg, time=time, payload=pre_event.payload)
 
     def inform_all(self, event: Event) -> None:
-        for member in self.event_queue.channels[event.msg]:
+        for member in self.event_queue.channels.get(event.msg, f"{event.msg} gibt es nicht"):
             if follow_up := self.call_member(member, event):
                 new_event = self.create_follow_up_event(follow_up)
                 self.event_queue.put(new_event)

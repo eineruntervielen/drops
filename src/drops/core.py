@@ -2,11 +2,10 @@ import functools
 from enum import Enum, unique
 from typing import Callable, Hashable
 
-from src.drops import Event
 import tomllib
 from typing import Any
 
-from drops import Drops, ScheduledEvent
+from drops.drops import Drops, Event
 from importlib.machinery import SourceFileLoader
 
 
@@ -17,7 +16,7 @@ def load_cls_from_scenario(cls_path, cls_name):
 
 
 def open_toml_scenario(scenario_name: str) -> dict[str, Any]:
-    SCENARIO = + scenario_name
+    SCENARIO = scenario_name
     with open(SCENARIO, mode="rb") as t:
         return tomllib.load(t)
 
@@ -41,9 +40,9 @@ def create_logger(log_func: Callable[[Hashable, str, Event], None]):
         def wrapper(*args, **kwargs):
             msg = func.__name__
             class_name, event = args
-            cls = str(class_name)
+            cls = str(class_name)[:-2]  # remove parenthesis
             log_func(msg, cls, event)
-            func(*args, **kwargs)
+            return func(*args, **kwargs)
 
         return wrapper
 
@@ -70,6 +69,9 @@ class DropsMessage(Enum):
 
     def __repr__(self) -> str:
         return f'<{self.__class__.__name__}.{self.name}>'
+
+    def __str__(self) -> str:
+        return f"{self.name}"
 # class DropsHTTPRequestHandler(SimpleHTTPRequestHandler):
 #     """
 #     recepie:

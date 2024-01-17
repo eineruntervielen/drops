@@ -1,0 +1,30 @@
+from dataclasses import dataclass
+
+from drops import DelayedEvent, Event
+from settings import create_logger, logger
+
+
+def washing_line_log(msg, name, event) -> None:
+    match msg:
+        case "hello":
+            logger(f"{event.time} Hello")
+        case "world":
+            logger("A car is stared washing")
+
+
+log = create_logger(washing_line_log)
+
+
+@dataclass
+class {{ COMPONEN_NAME }}:
+    consumptions = ("hello", "world")
+
+
+    @log
+    def hello(self, e: Event) -> DelayedEvent:
+        return DelayedEvent(msg="world", delay=1)
+
+
+    @log
+    def world(self, e: Event):
+        return DelayedEvent(msg="hello", delay=1)

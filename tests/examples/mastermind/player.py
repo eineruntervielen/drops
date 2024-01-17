@@ -1,6 +1,6 @@
 import random
 
-from src.drops import Producer, Event
+from drops import Producer, Event
 
 
 class Player(Producer):

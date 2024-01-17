@@ -1,7 +1,7 @@
 import random
 from dataclasses import dataclass
 
-from src.drops import Producer
+from drops import Producer
 
 C_RED = "\033[91m"
 C_GREEN = "\033[92m"
