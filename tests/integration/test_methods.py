@@ -1,7 +1,7 @@
 import unittest
 
-from drops.drops import Drops, Event
-from tests.examples.car_wash.car_wash import WashingLine, gen_car
+from drops.drops_old import Drops, Event
+from tests.examples.car_wash.__main__ import WashingLine, gen_car
 
 
 class TestCarWash(unittest.TestCase):
