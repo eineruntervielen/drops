@@ -1,1 +1,1 @@
-{"config":{"lang":["en"],"separator":"[\\s\\-]+","pipeline":["stopWordFilter"]},"docs":[{"location":"","title":"Drops documentation","text":"<p>First an example for usual example</p>"}]}
+{"config":{"lang":["en"],"separator":"[\\s\\-]+","pipeline":["stopWordFilter"]},"docs":[{"location":"","title":"Drops documentation","text":"<p>Drops is a lightweight event-broker useful for developing large-scale discrete-event based systems and simulations.</p>"}]}
