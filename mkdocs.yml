@@ -1,7 +1,16 @@
 site_name: Drops
+site_url: https://eineruntervielen.github.io/drops/
+
+repo_url: https://github.com/eineruntervielen/drops
+repo_name: eineruntervielen/drops
+
 theme:
-  logo: assets/drops.svg
   name: material
+  language: en
+  logo: assets/drops.svg
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
   palette:
     primary: black
     palette: #63E6BE
