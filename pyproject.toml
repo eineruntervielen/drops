@@ -8,7 +8,7 @@ version = "0.1"
 authors = [
     { name = "Erik J Kostic" }
 ]
-description = "Discrete event simulations in pure python oop"
+description = "Event and Message Queue"
 readme = "README.md"
 requires-python = ">=3.7"
 classifiers = [
@@ -21,6 +21,8 @@ classifiers = [
 "Homepage" = "https://github.com/eineruntervielen/drops"
 [project.optional-dependencies]
 dev = [
+    "mkdocs",
+    "mkdocs-material",
     "mypy==0.982",
     "black==22.10.0"
 ]

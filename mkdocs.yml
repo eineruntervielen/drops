@@ -1,0 +1,7 @@
+site_name: Drops
+theme:
+  logo: assets/drops.svg
+  name: material
+  palette:
+    primary: black
+    palette: #63E6BE

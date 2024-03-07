@@ -5,7 +5,7 @@ from typing import Callable, Hashable
 import tomllib
 from typing import Any
 
-from drops.drops import Drops, Event
+from drops.drops_old import Drops, Event
 from importlib.machinery import SourceFileLoader
 
 
