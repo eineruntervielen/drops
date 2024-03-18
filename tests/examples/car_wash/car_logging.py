@@ -3,7 +3,7 @@ __all__ = ("car_arrives", "start_wash", "stop_sending")
 
 def car_arrives(e) -> None:
     """print the arrival event"""
-    print(f"A car with Id = {e.body.get("car")} arrived at {e.time}")
+    print(f"A car with Id = {e.body.get('car')} arrived at {e.time}")
 
 
 def start_wash(e) -> None:
