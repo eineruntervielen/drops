@@ -3,16 +3,9 @@ __all__ = ["WashingLine"]
 import random
 from collections import deque
 from dataclasses import dataclass
-from typing import TypedDict
 
 from drops.core import DelayedEvent as DEvent
 from drops.core import Event
-
-
-class JSONWashingLine(TypedDict):
-    collected_dirt: int
-    length_waiting_line: int
-    is_free: bool
 
 
 @dataclass
@@ -27,20 +20,6 @@ class WashingLine:
     waiting_line = deque()
     washing_position = deque(maxlen=1)
     time_washing = 8
-
-    def __str__(self) -> str:
-        return "WashingLine"
-
-    def JSON(self) -> JSONWashingLine:
-        return JSONWashingLine(
-            collected_dirt=self.collected_dirt,
-            length_waiting_line=len(self.waiting_line),
-            is_free=self.is_washing
-        )
-
-    @property
-    def is_washing(self):
-        return len(self.washing_position) > 0
 
     def car_arrives(self, e: Event) -> DEvent:
         car = e.body.get("car")
