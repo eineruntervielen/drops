@@ -1,3 +1,3 @@
 # Drops documentation
 
-First an example for usual example
+Drops is a lightweight event-broker useful for developing large-scale discrete-event based systems and simulations.

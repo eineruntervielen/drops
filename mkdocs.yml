@@ -4,6 +4,14 @@ site_url: https://eineruntervielen.github.io/drops/
 repo_url: https://github.com/eineruntervielen/drops
 repo_name: eineruntervielen/drops
 
+
+nav:
+  - Drops: index.md
+  - How it works...: arch.md
+  - Learn by example: learn/index.md
+  - Flask and Drops: flask_and_drops.md
+
+
 theme:
   name: material
   language: en
@@ -12,5 +20,17 @@ theme:
     - navigation.tabs
     - navigation.tabs.sticky
   palette:
-    primary: black
-    palette: #63E6BE
+    primary: white
+#    palette: #63E6BE
+
+
+markdown_extensions:
+  - attr_list
+  - pymdownx.arithmatex:
+      generic: true
+
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js

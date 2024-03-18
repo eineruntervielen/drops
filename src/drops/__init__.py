@@ -1,3 +1,3 @@
-from drops.drops import Drops
+from drops.core import Drops
 
 __all__ = ["Drops"]

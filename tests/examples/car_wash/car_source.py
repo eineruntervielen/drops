@@ -1,42 +1,26 @@
 import random
-from typing import NamedTuple, Optional
+from typing import Optional
 
-from drops.drops import DelayedEvent, Event, EventCallback
-
-
-class Car(NamedTuple):
-    ident: 0
-    dirt: float
-
-
-def make_car(counter: int) -> Car:
-    return Car(ident=counter, dirt=round(random.uniform(0.2, 1), 2))
-
-
-def send_car_every_5_sec(event: Event) -> DelayedEvent:
-    ident = event.body.get("car").counter + 1
-    return DelayedEvent(msg="car_arrives", delay_s=5, body={"car": make_car(ident)})
+from drops.core import DelayedEvent, Event, EventCallback
+from tests.examples.car_wash.car import make_car
 
 
 def car_source_gen() -> EventCallback:
     counter = 0
     send = True
 
-    def car_source(e: Optional[Event]):
-        _ = e
+    def car_source(e: Optional[Event]) -> DelayedEvent:
         nonlocal counter
         nonlocal send
-        if counter >= 10:
+        if counter >= 20:
             send = False
 
+        rnd = random.randint(10, 25)
+        t = e.time if e else 0
         while send:
             counter += 1
-            return DelayedEvent(
-                msg="car_arrives",
-                delay_s=random.randint(4, 10),
-                body={"car": make_car(counter)}
-            )
+            return DelayedEvent(msg="car_arrives", delay_s=rnd, body={"car": make_car(counter)})
 
-    car_source.consumptions = ("car_arrives", "stop_sending", "end_wash")
+    car_source.consumptions = ("car_arrives",)
 
     return car_source
