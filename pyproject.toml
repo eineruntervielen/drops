@@ -21,8 +21,10 @@ classifiers = [
 "Homepage" = "https://github.com/eineruntervielen/drops"
 [project.optional-dependencies]
 dev = [
+    "termynal",
     "mkdocs",
     "mkdocs-material",
+    "mdx_include",
     "mypy==0.982",
     "black==22.10.0"
 ]
