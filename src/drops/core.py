@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import time
 import types
+import typing
 from inspect import isfunction, isgeneratorfunction
 from itertools import count
 from queue import PriorityQueue
@@ -38,6 +39,15 @@ Handler = type | Callable[[...], EventCallback]
 
 
 class EventQueue(PriorityQueue[Event]):
+
+    @staticmethod
+    def call_member(member, event: Event) -> DelayedEvent:
+        if isfunction(member) or isgeneratorfunction(member):
+            callback: EventCallback = member
+        else:
+            callback: EventCallback = getattr(member, event.msg)
+        follow_up = callback(event)
+        return follow_up
 
     def __init__(self, maxsize: int) -> None:
         super().__init__(maxsize)
@@ -95,15 +105,6 @@ class Drops:
         for msg in inst.consumptions:
             self.register_handler(msg, inst)
 
-    @staticmethod
-    def call_member(member, event: Event) -> DelayedEvent:
-        if isfunction(member) or isgeneratorfunction(member):
-            callback: EventCallback = member
-        else:
-            callback: EventCallback = getattr(member, event.msg)
-        follow_up = callback(event)
-        return follow_up
-
     def create_follow_up_event(self, pub: DelayedEvent) -> Event:
         return Event(
             event_id=next(self.event_counter),
@@ -114,7 +115,7 @@ class Drops:
 
     def inform_all(self, event: Event) -> None:
         for member in self.event_queue.channels.get(event.msg):
-            if follow_up := self.call_member(member, event):
+            if follow_up := EventQueue.call_member(member, event):
                 if isinstance(follow_up, list):
                     for fup in follow_up:
                         new_event = self.create_follow_up_event(fup)
@@ -143,19 +144,11 @@ class Drops:
             # blabla
             return self
 
-    def run_while(self, websocket: SocketIO, stop_event: threading.Event) -> None:
-        while not stop_event.is_set():
-            self.run_return(timeout_s=.4)
+    def run_with_cb_while(self, cb: Callable[[dict[str, Any]], Any], pred: bool) -> None:
+        while pred:
+            self.run_return(timeout_s=1)
             c = {
                 str(thing): thing.JSON() for thing in self.json_schema
             }
-            print(c)
-            body = dict(
-                current_time=self.now,
-                **c
-            )
-            print(body)
-            websocket.emit(
-                "process_status",
-                body
-            )
+            body = dict(current_time=self.now, **c)
+            cb(body)

@@ -10,8 +10,6 @@ nav:
   - How it works...: arch.md
   - Learn by example: learn/index.md
   - Flask and Drops: flask_and_drops.md
-
-
 theme:
   name: material
   language: en
@@ -21,11 +19,28 @@ theme:
     - navigation.tabs.sticky
   palette:
     primary: black
-#    palette: #63E6BE
+  icon:
+    admonition:
+      note: fontawesome/solid/note-sticky
+      abstract: fontawesome/solid/book
+      info: fontawesome/solid/circle-info
+      tip: fontawesome/solid/bullhorn
+      success: fontawesome/solid/check
+      question: fontawesome/solid/circle-question
+      warning: fontawesome/solid/triangle-exclamation
+      failure: fontawesome/solid/bomb
+      danger: fontawesome/solid/skull
+      bug: fontawesome/solid/robot
+      example: fontawesome/solid/flask
+      quote: fontawesome/solid/quote-left
+
 plugins:
   - termynal
 
 markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - md_in_html
   - termynal:
       prompt_literal_start:
         - "$"
@@ -46,7 +61,6 @@ markdown_extensions:
       pygments_lang_class: true
   - pymdownx.inlinehilite
   - pymdownx.snippets
-  - pymdownx.superfences
 
 
 extra_javascript:
