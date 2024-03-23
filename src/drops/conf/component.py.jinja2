@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from drops import DelayedEvent, Event
+from drops import DEvent, Event
 from settings import create_logger, logger
 
 
@@ -21,10 +21,10 @@ class {{ COMPONEN_NAME }}:
 
 
     @log
-    def hello(self, e: Event) -> DelayedEvent:
-        return DelayedEvent(msg="world", delay=1)
+    def hello(self, e: Event) -> DEvent:
+        return DEvent(msg="world", delay=1)
 
 
     @log
     def world(self, e: Event):
-        return DelayedEvent(msg="hello", delay=1)
+        return DEvent(msg="hello", delay=1)

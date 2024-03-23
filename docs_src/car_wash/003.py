@@ -1,10 +1,9 @@
-__all__ = ["WashingLine"]
-
+import random
 from collections import deque
 from dataclasses import dataclass
-from random import uniform
 
-from drops.core import DEvent, Event
+from drops.core import DEvent as DEvent
+from drops.core import Event
 
 
 @dataclass
@@ -22,23 +21,22 @@ class WashingLine:
 
     def car_arrives(self, e: Event) -> DEvent:
         car = e.body.get("car")
-        print(f"{e.time:<10}Car({car.car_id}|{car.dirt:.3f}) arriving at the WashingLine")
-        print(" " * 10 + "Checking if washing position is occupied")
+        print(f"t={e.time} arriving {car}")
         if len(self.washing_position) == 0:
-            print(f"{e.time:<10}getting {car} from the event at start_wash and append to washing position")
+            print(f"t={e.time} getting {car} from the event at start_wash and append to washing position")
             self.washing_position.append(car)
             return DEvent(msg="start_wash", delay_s=1, body=e.body)
         else:
-            print(f"{e.time:<10}putting {car} in waiting line")
+            print(f"t={e.time} putting {car} in waiting line")
             self.waiting_line.append(car)
 
     def start_wash(self, e: Event) -> DEvent:
-        return DEvent(msg="end_wash", delay_s=self.time_washing, body={"car": e.body.get("car")})
+        return DEvent(msg="end_wash", delay_s=20, body={"car": e.body.get("car")})
 
     def end_wash(self, e: Event) -> DEvent:
         clean_car = self.washing_position.popleft()
-        print(f"{e.time:<10}leaving system {clean_car}")
-        removed_dirt = round(uniform(0, clean_car.dirt), 3)
+        print(f"t={e.time} leaving system {clean_car}")
+        removed_dirt = round(random.uniform(0, clean_car.dirt), 3)
         self.collected_dirt += removed_dirt
         if self.waiting_line:
             next_car = self.waiting_line.popleft()

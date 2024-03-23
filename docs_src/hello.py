@@ -1,9 +1,9 @@
-from drops import DelayedEvent, Drops, Event
+from drops import DEvent, Drops, Event
 
 
 def foo(e: Event):
     print("Hello " + e.body.get("greeter"))
-    return DelayedEvent(msg="say_goodbye", delay_s=1, body={"name": "Alice"})
+    return DEvent(msg="say_goodbye", delay_s=1, body={"name": "Alice"})
 
 
 def bar(e: Event):
@@ -11,12 +11,14 @@ def bar(e: Event):
 
 
 if __name__ == "__main__":
-    drops = Drops(__name__)
+    drops = Drops()
 
-    drops.register_callback(foo, ("say_hello",), )
-    drops.register_callback(bar, ("say_goodbye",))
+    drops.register_callback(foo, "say_hello")
+    drops.register_callback(bar, "say_goodbye")
 
-    # Kick-off event
-    drops.event_queue.put(Event(event_id=0, msg="say_hello", time=0, body={"greeter": "Alice"}))
+    # Publish a message with no delay and a given body into the queue.
+    # After the broker receives this message, follow-up events will be
+    # triggered until everything inside the queue is consumed.
+    drops.enqueue(msg="say_hello", delay_s=0, body={"greeter": "Alice"})
 
     drops.run()

@@ -4,6 +4,25 @@ In this section we will focus on a standard use-case of using Drops in the conte
 also play another role in the advanced section where we will describe how to combine Drops with Flask to make a live web-application
 that shows the current state of the simulation in a UI.
 
+## Minimal Example
+
+Create a python file called `hello.py` with the following code:
+
+```python title="hello.py" 
+{!../docs_src/hello.py!}
+```
+
+And then run your application from your terminal
+
+
+<!-- termynal -->
+
+```
+> python3 hello.py
+Hello Alice
+Goodbye Alice
+```
+
 ## Car Washing Line
 
 ### Problem statement and simulation model
@@ -61,15 +80,29 @@ tells us how dirty the car is.
 
 #### Sources
 
-Now we need something that can send a car in a specific time period to our washing line. We will call this thing a **source**. 
+Now we need something that can send a car in a specific time period to our washing line. We will call this thing a **source**.
 In our case, we will model our source as a finite source sending cars every 5 minutes to our washing line.
 
 ```python title="source.py"
 {!../docs_src/car_wash/002.py!}
 ```
 
-
-Most developers would have started using a class-based approach to model our source. But since Drops is capable of registering  we decide on using
+Most developers would have started using a class-based approach to model our source. But since Drops is capable of registering we decide on
+using
 a one to model our car-source. This will make our code more concise and remove some unnecessary boilerplate as well.
 
-####  
+First we initialize the outer function `finite_car_source_maker` with a maximum number of cars we want to send to the washing line. Then
+we instantiate an infinite counter from the `itertools` module. After that we define the actual `car_source`.
+In this function the counter from the outer-namespace serves as the Id for the car we want to send to the washing line and
+as a counter in the while-loop. There we loop as long as we have not send enough cars which is $n_{cars} - n_{send} > 0$.
+
+The return-type of our source is an instance of `DelayedEvent`. Drops will use this entity to create a concrete `Event` instance
+in its mechanics that will be dispatched to every **Component** in the next iteration of the dispatching-algorithm.
+
+#### Classes
+
+The next **Component** we are going to model is the actual `WashingLine` aka. the star of our application.
+
+```python title="washing_line.py"
+{!../docs_src/car_wash/003.py!}
+```

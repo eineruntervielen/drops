@@ -1,3 +1,3 @@
-from drops.core import Drops, Event, DelayedEvent
+from drops.core import Drops, Event, DEvent
 
-__all__ = ["Drops", "Event", "DelayedEvent"]
+__all__ = ["Drops", "Event", "DEvent"]
