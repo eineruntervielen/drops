@@ -31,7 +31,7 @@ class WashingLine:
             self.waiting_line.append(car)
 
     def start_wash(self, e: Event) -> DEvent:
-        return DEvent(msg="end_wash", delay_s=20, body={"car": e.body.get("car")})
+        return DEvent(msg="end_wash", delay_s=self.time_washing, body={"car": e.body.get("car")})
 
     def end_wash(self, e: Event) -> DEvent:
         clean_car = self.washing_position.popleft()

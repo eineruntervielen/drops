@@ -3,10 +3,10 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "Drops"
-version = "0.1"
+name = "py_drops"
+version = "0.0.1"
 authors = [
-    { name = "Erik J Kostic" }
+    { name = "Erik J Kostic", email = "ErikJohannesKostic@gmail.com" }
 ]
 description = "Event and Message Queue"
 readme = "README.md"

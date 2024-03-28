@@ -34,7 +34,6 @@ class Event(NamedTuple):
 EventCallback = Callable[[Optional[Event]], Optional[DEvent]]
 Handler = type | Callable[[...], EventCallback]
 
-
 class EventQueue(PriorityQueue[Event]):
 
     @staticmethod
@@ -171,3 +170,4 @@ class Drops:
             }
             body = dict(current_time=self.now, **c)
             cb(body)
+

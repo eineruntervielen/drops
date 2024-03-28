@@ -1,5 +1,3 @@
-__all__ = ["WashingLine"]
-
 from collections import deque
 from dataclasses import dataclass
 from random import uniform
