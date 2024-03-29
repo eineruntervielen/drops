@@ -114,6 +114,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#using-pip" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -348,6 +353,19 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Install
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
         
@@ -358,6 +376,43 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#create-a-virtual-environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      Create a virtual environment
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#activate-the-environment-and-install-using-pip" class="md-nav__link">
+    <span class="md-ellipsis">
+      Activate the environment and install using pip
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -440,6 +495,34 @@
   
   
   
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#create-a-virtual-environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      Create a virtual environment
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#activate-the-environment-and-install-using-pip" class="md-nav__link">
+    <span class="md-ellipsis">
+      Activate the environment and install using pip
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -457,9 +540,16 @@
   
 
 
-  <h1>Install</h1>
+<h1 id="using-pip">Using pip</h1>
+<h2 id="create-a-virtual-environment">Create a virtual environment</h2>
+<div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span data-ty="input" data-ty-prompt="$">mkdir my_project</span><span data-ty="input" data-ty-prompt="$">cd my_project</span><span data-ty="input" data-ty-prompt="$">python3 -m venv my_venv</span><span data-ty></span></div>
 
+<h2 id="activate-the-environment-and-install-using-pip">Activate the environment and install using pip</h2>
+<div class="termy" data-termynal data-ty-macos data-ty-title="bash"><span data-ty="input" data-ty-prompt="$">source my_venv/bin/activate</span><span data-ty="input" data-ty-prompt="$">pip install drops-py</span><span data-ty="progress"></span><span data-ty>Installed<br></span></div>
 
+<hr />
+<h1 id="github">GitHub</h1>
+<p>Just directly download the project sources onto your machine and install using pip...</p>
 
 
 
