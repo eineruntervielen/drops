@@ -1,14 +1,14 @@
-from random import random
 from itertools import count
-from typing import Optional
+from random import random
 
 from drops import DEvent, Event
+from tests.examples.car_wash.car import Car
 
 
 def finite_car_source_maker(num_cars: int):
-    counter = count(start=0, step=1)
+    counter = count()
 
-    def car_source(e: Optional[Event]) -> DEvent:
+    def car_source(e: Event) -> DEvent:
         car_id = next(counter)
         while num_cars - car_id > 0:
             return DEvent(
@@ -17,5 +17,4 @@ def finite_car_source_maker(num_cars: int):
                 body={"car": Car(car_id=car_id, dirt=random())}
             )
 
-    car_source.consumptions = ("car_arrives",)
     return car_source

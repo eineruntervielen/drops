@@ -16,12 +16,12 @@ class DEvent(NamedTuple):
     body: AnyDict = {}
 
 
-class Event(NamedTuple):
+class Event[T](NamedTuple):
     event_id: int
     msg: str
     time: int
     # sender: str
-    body: AnyDict
+    body: T
 
     def __lt__(self, other: Event) -> bool:
         return (
@@ -31,8 +31,9 @@ class Event(NamedTuple):
         )
 
 
-EventCallback = Callable[[Optional[Event]], Optional[DEvent]]
+EventCallback = Callable[[Event], DEvent]
 Handler = type | Callable[[...], EventCallback]
+
 
 class EventQueue(PriorityQueue[Event]):
 
@@ -79,6 +80,7 @@ class Drops:
         self.event_queue.add_handler_to_channel(msg, handler)
 
     def register_source(self, func, *msgs: str, call_initial: bool) -> None:
+        print(DeprecationWarning("Will be removed in a future release"))
         for msg in msgs:
             self.register_handler(msg, func)
         if call_initial:
@@ -170,4 +172,3 @@ class Drops:
             }
             body = dict(current_time=self.now, **c)
             cb(body)
-

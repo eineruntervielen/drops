@@ -31,7 +31,7 @@ from itertools import count
 
 
 def finite_car_source_maker(num_cars: int):
-    counter = count(start=0, step=1)
+    counter = count()
 
     def car_source(e: Optional[Event]) -> DEvent:
         car_id = next(counter)

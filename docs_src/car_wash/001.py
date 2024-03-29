@@ -1,6 +1,6 @@
-from typing import Annotated, NamedTuple
+from typing import NamedTuple
 
 
 class Car(NamedTuple):
-    car_id: Annotated[int, "Positive integer greater than 0"]
-    dirt: Annotated[float, "Real number between 0 and 1"]
+    car_id: int  # Positive integer greater than 0
+    dirt: float  # Real number between 0 and 1
